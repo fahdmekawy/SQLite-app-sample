@@ -20,7 +20,7 @@ class DbHelper {
 
     _db = await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (Database db, int v) {
         // create tables
         db.execute(
@@ -30,6 +30,11 @@ class DbHelper {
           'content varchar(255),'
           'hours integer)',
         );
+      },
+      onUpgrade: (Database db, int OldV, int newV) async {
+        if (OldV < newV) {
+          await db.execute('alter table courses add column level varchar(50)');
+        }
       },
     );
     return _db;
@@ -48,5 +53,15 @@ class DbHelper {
   Future<int> delete(int id) async {
     Database db = await createDatabase();
     return db.delete('courses', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<int> update(Course course) async {
+    Database db = await createDatabase();
+    return await db.update(
+      'courses',
+      course.toMap(),
+      where: 'id = ?',
+      whereArgs: [course.id],
+    );
   }
 }
